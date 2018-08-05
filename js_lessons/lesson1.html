@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lesson 1 - User info & recursion function</title>
+</head>
+<body>
+<script>
+
+    // First part take Name, Birthday, Adress with prompt and display with alert
+    var userNameOut, userDateOut, userAdressOut, numberAnswer;
+    var name = prompt("Please enter your name", "Harry Potter Potterovych");
+
+    if (name == null || name == "") {
+        userNameOut = "No name entered";
+    } else {
+        userNameOut = "Your name is: " + name + "!";
+    }
+
+    var birthday = prompt("Please enter your birthday", "1 may 1970 bc");
+
+    if (birthday == null || birthday == "") {
+        userDateOut = "No date entered";
+    } else {
+        userDateOut = "Your birthday is: " + birthday + "!";
+    }
+
+    var adress = prompt("Please enter your adress", "Dark wood, Great tree, hole 12");
+
+    if (adress == null || adress == "") {
+        userAdressOut = "No adress entered";
+    } else {
+        userAdressOut = "Your adress is: " + adress + "!";
+    }
+
+    alert(userNameOut + "\n" + userDateOut + "\n" + userAdressOut);
+
+
+    //Second part write recursive function
+    const pow = (baseNum, powNum) => powNum > 1 ? baseNum * pow(baseNum, powNum - 1) : baseNum;
+
+    //Additional functional to second part
+    alert('Next will be displayed Power Function pow(baseNumber, powNumber) OR baseNumber ^ powNumber');
+    var baseNumber = prompt("Please enter base number", "2");
+    if (baseNumber == null || baseNumber == "") {
+        numberAnswer = "No base number entered";
+    } else {
+        baseNumber = +baseNumber;
+        var powNumber = prompt("Please enter power number", "3");
+        if (powNumber == null || powNumber == "") {
+            numberAnswer = "No power number entered";
+        } else {
+            powNumber = +powNumber;
+            numberAnswer = pow(baseNumber, powNumber);
+        }
+    }
+    alert('base number: ' + baseNumber + "\n" + 'power number: ' + powNumber + "\n" + 'Answer: ' + numberAnswer);
+
+</script>
+
+</body>
+</html>
