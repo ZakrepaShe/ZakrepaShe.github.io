@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lesson 2 - Tree with collapse & folder selection</title>
+    <style>
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            margin: 0;
+            padding: 0;
+        }
+        .tree {
+            display: block;
+            padding: 20px;
+        }
+
+        .node {
+            position: relative;
+            padding: 2px 0 0;
+        }
+
+        .selected::after{
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 18px;
+            background: rgba(198, 241, 255, 0.48);
+        }
+        .triangle {
+            position: absolute;
+            top: 9px;
+            left: -13px;
+            width: 0;
+            height: 0;
+            border-right: 5px solid transparent;
+            border-left: 5px solid transparent;
+            border-top: 5px solid #aaa;
+            border-bottom: 5px solid transparent;
+        }
+        .collapsed .triangle {
+            left: -10px;
+            top: 6px;
+            border-left: 5px solid #aaa;
+            border-top: 5px solid transparent;
+        }
+        .collapsed .node{
+            display: none;
+        }
+
+        .node .node {
+            margin-left: 22px;
+        }
+
+        .node::before {
+            content: attr(data-title);
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 90 70"><path d="M87 65.2a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-61a3 3 0 0 1 3-3h21a2 2 0 0 1 1.7.9l3.8 5.3a2 2 0 0 0 1.6.8h50a3 3 0 0 1 3 3z" fill="#9be0ff"/><rect x="3.1" y="15.3" width="84" height="53" rx="3" ry="3" fill="#7dd2f7"/></svg>') no-repeat left;
+            padding-left: 22px;
+        }
+        #selection-div {
+            position: absolute;
+            top: 0;
+            left: 0;
+            border: 1px solid rgb(0,120,204);
+            background: rgba(0,120,215,.3);
+            width: 0;
+            height: 0;
+        }
+    </style>
+</head>
+<body id="selection">
+<div class="tree">
+    <div class="node" data-title="world"></div>
+    <div class="node" data-title="hello">
+        <span class="triangle"></span>
+        <div class="node" data-title="world">
+            <span class="triangle"></span>
+            <div class="node" data-title="deeper!">
+                <span class="triangle"></span>
+                <div class="node" data-title="so dark"></div>
+            </div>
+        </div>
+    </div>
+    <div class="node" data-title="world"></div>
+</div>
+<script>
+    var startClick = {
+        x:0,
+        y:0
+    };
+    var nodeSize = {
+        width:100,
+        height:20
+    };
+    var nodes = document.getElementsByClassName('node');
+
+    function mousemoveFunction(e) {
+        var selectionDiv = document.getElementById('selection-div');
+        var nodesParams = [];
+        for(var i=0;i<nodes.length;i++){
+            nodesParams.push(nodes[i].getBoundingClientRect())
+        }
+        if (e.clientX - startClick.x>0){
+            selectionDiv.style.width = e.clientX - startClick.x + 'px';
+            for(var i=0;i<nodesParams.length;i++){
+                if(nodesParams[i].left < e.clientX && (nodesParams[i].left + nodeSize.width) > startClick.x){
+                    nodesParams[i].x_match = true
+                }
+            }
+        } else {
+            selectionDiv.style.left = e.clientX + 'px';
+            selectionDiv.style.width = startClick.x - e.clientX + 'px';
+            for(var i=0;i<nodesParams.length;i++){
+                if((nodesParams[i].left + nodeSize.width) > e.clientX && nodesParams[i].left < startClick.x){
+                    nodesParams[i].x_match = true
+                }
+            }
+        }
+
+        if (e.clientY - startClick.y>0){
+            selectionDiv.style.height = e.clientY - startClick.y + 'px';
+            for(var i=0;i<nodesParams.length;i++){
+                if(nodesParams[i].top < e.clientY && (nodesParams[i].top + nodeSize.height) > startClick.y){
+                    nodesParams[i].y_match = true
+                }
+            }
+        } else {
+            selectionDiv.style.top = e.clientY + 'px';
+            selectionDiv.style.height = startClick.y - e.clientY + 'px';
+            for(var i=0;i<nodesParams.length;i++){
+                if((nodesParams[i].top + nodeSize.height) > e.clientY && nodesParams[i].top < startClick.y){
+                    nodesParams[i].y_match = true
+                }
+            }
+        }
+
+        for(var i=0;i<nodesParams.length;i++){
+            if(nodesParams[i].y_match && nodesParams[i].x_match){
+                nodes[i].classList.add('selected')
+            } else {
+                nodes[i].classList.remove('selected')
+            }
+        }
+    }
+    function clearTrackFunction() {
+        var selectionDiv = document.getElementById('selection-div');
+        if(selectionDiv){
+            selectionDiv.parentNode.removeChild(selectionDiv);
+            document.removeEventListener('mousemove', mousemoveFunction)
+        }
+
+    }
+    function highlightFolder(e){
+        if(!e.shiftKey){
+            for(var i=0;i<nodes.length;i++){
+                nodes[i].classList.remove('selected')
+            }
+        }
+        if(e.target.classList.contains('node')){
+            e.target.classList.add('selected')
+        }
+    }
+    function toggleFolder(e){
+        if(e.target.classList.contains('triangle')){
+            var source = e.target.parentNode;
+            source.classList.toggle('collapsed');
+            var childDeep = source.getElementsByClassName('node');
+            for(var i=0;i<childDeep.length;i++){
+                childDeep[i].classList.add('collapsed');
+            }
+        }
+    }
+
+    document.addEventListener('mousedown', function (e) {
+        toggleFolder(e);
+        highlightFolder(e);
+        clearTrackFunction();
+        startClick.x = e.clientX;
+        startClick.y = e.clientY;
+        var selectionDiv = document.createElement('div');
+        selectionDiv.setAttribute('id','selection-div');
+        selectionDiv.style.left = e.clientX + 'px';
+        selectionDiv.style.top = e.clientY + 'px';
+        document.getElementById('selection').appendChild(selectionDiv);
+        document.addEventListener('mousemove', mousemoveFunction)
+    });
+    document.addEventListener('mouseup', clearTrackFunction);
+
+</script>
+</body>
+</html>
