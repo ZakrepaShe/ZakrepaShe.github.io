@@ -88,57 +88,75 @@
     <div class="node" data-title="world"></div>
 </div>
 <script>
-    var startClick = {
+
+    //params for mouse down coordinates
+    const startClick = {
         x:0,
         y:0
     };
-    var nodeSize = {
+
+    //folder selective size from top left corner
+    const nodeSize = {
         width:100,
         height:20
     };
-    var nodes = document.getElementsByClassName('node');
+    let nodes = document.getElementsByClassName('node');
 
+    //function to resize & reposition selective div element
     function mousemoveFunction(e) {
-        var selectionDiv = document.getElementById('selection-div');
-        var nodesParams = [];
-        for(var i=0;i<nodes.length;i++){
+        let selectionDiv = document.getElementById('selection-div');
+        let nodesParams = [];
+        for(let i=0;i<nodes.length;i++){
             nodesParams.push(nodes[i].getBoundingClientRect())
         }
+
+        //selection div moves right from start point
         if (e.clientX - startClick.x>0){
+            //correct selected div with
             selectionDiv.style.width = e.clientX - startClick.x + 'px';
-            for(var i=0;i<nodesParams.length;i++){
+            for(let i=0;i<nodesParams.length;i++){
+                //find if selected div overlaps node by X coordinate
                 if(nodesParams[i].left < e.clientX && (nodesParams[i].left + nodeSize.width) > startClick.x){
                     nodesParams[i].x_match = true
                 }
             }
         } else {
+            //selection div moves left from start point
+            //reposition selected div left side coordinates & correct selected div with
             selectionDiv.style.left = e.clientX + 'px';
             selectionDiv.style.width = startClick.x - e.clientX + 'px';
-            for(var i=0;i<nodesParams.length;i++){
+            for(let i=0;i<nodesParams.length;i++){
+                //find if selected div overlaps node by X coordinate
                 if((nodesParams[i].left + nodeSize.width) > e.clientX && nodesParams[i].left < startClick.x){
                     nodesParams[i].x_match = true
                 }
             }
         }
 
+        //selection div moves down from start point
         if (e.clientY - startClick.y>0){
             selectionDiv.style.height = e.clientY - startClick.y + 'px';
-            for(var i=0;i<nodesParams.length;i++){
+            for(let i=0;i<nodesParams.length;i++){
+                //find if selected div overlaps node by Y coordinate
                 if(nodesParams[i].top < e.clientY && (nodesParams[i].top + nodeSize.height) > startClick.y){
                     nodesParams[i].y_match = true
                 }
             }
         } else {
+            //selection div moves up from start point
+            //reposition selected div top side coordinates & correct selected div height
             selectionDiv.style.top = e.clientY + 'px';
             selectionDiv.style.height = startClick.y - e.clientY + 'px';
-            for(var i=0;i<nodesParams.length;i++){
+            for(let i=0;i<nodesParams.length;i++){
+                //find if selected div overlaps node by Y coordinate
                 if((nodesParams[i].top + nodeSize.height) > e.clientY && nodesParams[i].top < startClick.y){
                     nodesParams[i].y_match = true
                 }
             }
         }
 
-        for(var i=0;i<nodesParams.length;i++){
+        //highlight folders inside selected div
+        for(let i=0;i<nodesParams.length;i++){
             if(nodesParams[i].y_match && nodesParams[i].x_match){
                 nodes[i].classList.add('selected')
             } else {
@@ -146,17 +164,20 @@
             }
         }
     }
+
+    //remove selection div and tracking mouse function
     function clearTrackFunction() {
-        var selectionDiv = document.getElementById('selection-div');
+        let selectionDiv = document.getElementById('selection-div');
         if(selectionDiv){
             selectionDiv.parentNode.removeChild(selectionDiv);
             document.removeEventListener('mousemove', mousemoveFunction)
         }
-
     }
+
+    //highlight one or multiple folders if SHIFT is pressed
     function highlightFolder(e){
         if(!e.shiftKey){
-            for(var i=0;i<nodes.length;i++){
+            for(let i=0;i<nodes.length;i++){
                 nodes[i].classList.remove('selected')
             }
         }
@@ -164,28 +185,38 @@
             e.target.classList.add('selected')
         }
     }
+
+    //toggle folder & collapse all sub-folders
     function toggleFolder(e){
+        //only if clicked element is collapse control
         if(e.target.classList.contains('triangle')){
-            var source = e.target.parentNode;
+            let source = e.target.parentNode;
             source.classList.toggle('collapsed');
-            var childDeep = source.getElementsByClassName('node');
-            for(var i=0;i<childDeep.length;i++){
+
+            //collapse all sub-folders
+            let childDeep = source.getElementsByClassName('node');
+            for(let i=0;i<childDeep.length;i++){
                 childDeep[i].classList.add('collapsed');
             }
         }
     }
 
-    document.addEventListener('mousedown', function (e) {
-        toggleFolder(e);
-        highlightFolder(e);
-        clearTrackFunction();
-        startClick.x = e.clientX;
-        startClick.y = e.clientY;
-        var selectionDiv = document.createElement('div');
+    //create selection div with top left corner at mousedown coordinates
+    function createSelectionDiv(e){
+        let selectionDiv = document.createElement('div');
         selectionDiv.setAttribute('id','selection-div');
         selectionDiv.style.left = e.clientX + 'px';
         selectionDiv.style.top = e.clientY + 'px';
         document.getElementById('selection').appendChild(selectionDiv);
+    }
+
+    document.addEventListener('mousedown', function (e) {
+        toggleFolder(e);
+        highlightFolder(e);
+        clearTrackFunction();//for bugs if mouse upped outside browser
+        startClick.x = e.clientX;
+        startClick.y = e.clientY;
+        createSelectionDiv(e);
         document.addEventListener('mousemove', mousemoveFunction)
     });
     document.addEventListener('mouseup', clearTrackFunction);

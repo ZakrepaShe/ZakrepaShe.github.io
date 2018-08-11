@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lesson 3 - Polyfills for forEach, map, every, some, filter, reduce</title>
+</head>
+<body>
+
+<h1>All in console</h1>
+<script>
+
+  //forEach polyfill - eachFor!
+  if (!Array.prototype.eachFor) {
+    Array.prototype.eachFor = function (cb, _this) {
+      if (typeof cb !== "function") {
+        console.log('callback is not a function');
+        return false
+      }
+      for (var i = 0; i < this.length; i++) {
+        cb.call(_this, this[i], i, this)
+      }
+    }
+  }
+
+  var arr = [1, 2, 3];
+  console.log('forEach polyfill');
+  arr.eachFor(function (item, index, array) {
+    console.log('item:', item, 'index:', index, 'array:', array)
+  })
+
+  //map polyfill - Map!
+  if (!Array.prototype.Map) {
+    Array.prototype.Map = function (cb, _this) {
+      var newArr = [];
+      if (typeof cb !== "function") {
+        console.log('callback is not a function');
+        return false
+      }
+      for (var i = 0; i < this.length; i++) {
+        newArr.push(cb.call(_this, this[i], i, this))
+      }
+      return newArr
+    }
+  }
+
+  var arr2 = arr.Map(function (item, index, array) {
+    return item * 2
+  });
+
+  console.log('map polyfill');
+  console.log('original', arr);
+  console.log('multiplied by 2', arr2);
+
+  //every polyfill - Every!
+  if (!Array.prototype.Every) {
+    Array.prototype.Every = function (cb, _this) {
+      if (typeof cb !== "function") {
+        console.log('callback is not a function');
+        return false
+      }
+      for (var i = 0; i < this.length; i++) {
+        if (!cb.call(_this, this[i], i, this)) {
+          return false
+        }
+      }
+      return true
+    }
+  }
+
+  function bigger10(element, index, array) {
+    return element >= 10;
+  }
+
+  console.log('every polyfill');
+  console.log('[12, 5, 8, 130, 44] every bigger 10? -', [12, 5, 8, 130, 44].Every(bigger10));
+  console.log('[12, 54, 18, 130, 44] every bigger 10? -', [12, 54, 18, 130, 44].Every(bigger10));
+
+  //some polyfill - Some!
+  if (!Array.prototype.Some) {
+    Array.prototype.Some = function (cb, _this) {
+      if (typeof cb !== "function") {
+        console.log('callback is not a function');
+        return false
+      }
+      for (var i = 0; i < this.length; i++) {
+        if (!!cb.call(_this, this[i], i, this)) {
+          return true
+        }
+      }
+      return false
+    }
+  }
+  console.log('some polyfill');
+  console.log('[1, 5, 8, 3, 4] some bigger 10? -', [1, 5, 8, 3, 4].Some(bigger10));
+  console.log('[12, 54, 18, 130, 44] some bigger 10? -', [12, 54, 18, 130, 44].Some(bigger10));
+
+  //filter polyfill - Filter!
+  if (!Array.prototype.Filter) {
+    Array.prototype.Filter = function (cb, _this) {
+      var newArr = [];
+      if (typeof cb !== "function") {
+        console.log('callback is not a function');
+        return false
+      }
+      for (var i = 0; i < this.length; i++) {
+        if (!!cb.call(_this, this[i], i, this)) {
+          newArr.push(this[i])
+        }
+      }
+      return newArr
+    }
+  }
+
+  console.log('filter polyfill');
+  console.log('[1, 55, 8, 33, 4] filter bigger 10 -', [1, 55, 8, 33, 4].Filter(bigger10));
+
+  //reduce polyfill - Reduce!
+  if (!Array.prototype.Reduce) {
+    Array.prototype.Reduce = function (cb, initialValue) {
+      if (typeof cb !== "function") {
+        console.log('callback is not a function');
+        return false
+      }
+      var value = typeof initialValue === "undefined" ? this[0] : initialValue;
+      var iterator = typeof initialValue === "undefined" ? 1 : 0;
+      if (this.length === 0 && typeof initialValue === "undefined") {
+        console.log('error');
+      } else if (
+        (this.length === 1 && typeof initialValue === "undefined")
+        || (this.length === 0 && typeof initialValue !== "undefined")) {
+        return value
+      } else {
+        for (var i = iterator; i < this.length; i++) {
+          value = cb(value, this[i], i, this);
+        }
+      }
+      return value
+    }
+  }
+
+  console.log('reduce polyfill');
+  var a = [];
+  a.push(['previousValue', 'currentValue', 'index', 'array']);
+
+  var result1 = [0, 1, 2, 3, 4].Reduce(function (previousValue, currentValue, index, array) {
+    a.push([previousValue, currentValue, index, array.join(' ')]);
+    return previousValue + currentValue;
+  });
+
+  a.push(['result', result1]);
+  a.push(['accumulator', 'currentValue', 'index', 'array']);
+
+  var result2 = [0, 1, 2, 3, 4].Reduce(function (accumulator, currentValue, index, array) {
+    a.push([accumulator, currentValue, index, array.join(' ')]);
+    return accumulator + currentValue;
+  }, 10);
+
+  a.push(['result', result2]);
+  console.table(a);
+
+
+</script>
+
+</body>
+</html>
