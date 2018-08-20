@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>School sim</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Dynatable/0.3.1/jquery.dynatable.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.4/css/bootstrap.min.css">
+</head>
+<body>
+<!--Yep its jQuery, but only for table!-->
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Dynatable/0.3.1/jquery.dynatable.min.js"></script>
+<h2 id="maxScore"></h2>
+<table id="my-final-table" class="table">
+  <thead>
+  <th>name</th>
+  <th>age</th>
+  <th>absent</th>
+  <th>totalAverage</th>
+  <th>totalSuccess</th>
+  <th>courseResult</th>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+
+<script>
+
+  //Many magic variety numbers ^_^
+  class commonFuncts{
+    static isAbsent(){
+      return !!Math.round(Math.random()-0.46)
+    }
+    static genMark(degreesAmount){
+      let multipler = (1-Math.sqrt(degreesAmount)/degreesAmount)*0.8;
+      let result = Math.round((Math.random()+(isNaN(multipler)?0:multipler))*10);
+      return result < 10 ? result : Math.floor(result/10)*10;
+    }
+    static getRandomArrItem(arr){
+      return Math.floor(Math.random() * arr.length)
+    }
+  }
+
+  class BaseUser {
+    constructor(name,age){
+      this.name=name;
+      this.age=age;
+      this.absent=0;
+    }
+    getName() {
+      return this.name;
+    }
+    getAge(){
+      return this.age;
+    }
+    getAbsent(){
+      return this.absent
+    }
+    incAbsent(){
+      this.absent++
+    }
+    isAbsent() {
+      return commonFuncts.isAbsent()
+    }
+  }
+
+  class Teacher extends BaseUser {
+    constructor(name,age,subject){
+      super(name,age);
+      this.subject=subject;
+      this.degreesAmount = Math.ceil(Math.random()*10)
+    }
+    getSubject(){
+      return this.subject
+    }
+    getDegrees(){
+      return this.degreesAmount
+    }
+    setMarksToGroup(group){
+      group.forEach(student=>{
+        if(student.isAbsent()){
+          student.incAbsent();
+        } else {
+          student.setMark(this.subject,commonFuncts.genMark(this.degreesAmount))
+        }
+      })
+    }
+  }
+
+  class Student extends BaseUser {
+    constructor(name,age){
+      super(name,age);
+      this.markStorage = {};
+      this.courseResult;
+    }
+    setMark(subject,mark){
+      if (!this.markStorage[subject]) {
+        this.markStorage[subject] = [];
+      }
+      this.markStorage[subject].push(mark);
+    }
+    getTotalAverage(){
+      let allMarks = [];
+      Object.keys(this.markStorage).forEach(subject=>{
+        allMarks.push(...this.markStorage[subject])
+      });
+      return allMarks.reduce((sum,mark)=>sum+mark,0)/(allMarks.length);
+    }
+    getTotalSuccessData(){
+      let allMarks = [];
+      Object.keys(this.markStorage).forEach(subject=>{
+        allMarks.push(...this.markStorage[subject])
+      });
+      return {
+        total: allMarks.reduce((sum,mark)=>sum+mark,0),
+      }
+    }
+    getSubjectAverage(subject){
+      let subjectArray = this.markStorage[subject];
+      return subjectArray.reduce((sum,mark)=>sum+mark,0)/(subjectArray.length)
+    }
+    setCourseResult(result){
+      this.courseResult = result;
+    }
+    getCourseResult(){
+      return this.courseResult
+    }
+  }
+
+  class Administrator extends BaseUser {
+    setCourseResults(group,maxSussess){
+      group.forEach(student=>{
+        let studentSuccess = student.getTotalSuccessData();
+        if(studentSuccess.total>=maxSussess*0.8) {
+          student.setCourseResult('high achiever')
+        } else if (studentSuccess.total>=maxSussess*0.5){
+          student.setCourseResult('passed')
+        } else {
+          student.setCourseResult('failed')
+        }
+      })
+    }
+    getCourseResults(group){
+      return group.map(student=>({
+        name: student.getName(),
+        age: student.getAge(),
+        absent: student.getAbsent(),
+        totalAverage: student.getTotalAverage().toFixed(2),
+        totalSuccess: student.getTotalSuccessData().total,
+        courseResult: student.getCourseResult(),
+      }))
+    }
+  }
+
+  class School {
+    constructor(adminsData,teachersData){
+      this.admins = this.RoleFactory(adminsData,'admin');
+      this.teachers = this.RoleFactory(teachersData,'teacher');
+    }
+
+    startCourse(studentsData,courseDuration){
+      this.groupsResults=[];
+      this.maxSussess = this.teachers.length * courseDuration * 10;
+      document.getElementById('maxScore').innerText = 'Max Score is ' + this.maxSussess;
+      this.groups = studentsData.map(studentDataInGroup=>this.RoleFactory(studentDataInGroup,'student'));
+
+      for(let i=1;i<=courseDuration;i++){
+        this.groups.forEach(group=>{
+          this.teachers.forEach(teacher=>{
+            let lessonAdmin = this.admins[commonFuncts.getRandomArrItem(this.admins)];
+            if (lessonAdmin.isAbsent()) {
+              group.concat(teacher,lessonAdmin).forEach(human=>human.incAbsent());
+            } else if(teacher.isAbsent()) {
+              group.forEach(student=>student.incAbsent());
+            } else {
+              teacher.setMarksToGroup(group)
+            }
+          });
+          if(i===courseDuration){
+            let CourseResultsChecker = this.admins[commonFuncts.getRandomArrItem(this.admins)];
+            CourseResultsChecker.setCourseResults(group,this.maxSussess);
+            this.groupsResults.push(CourseResultsChecker.getCourseResults(group));
+          }
+        })
+      }
+      console.log('All School', this);
+      return this.groupsResults;
+    }
+
+    RoleFactory(peopleData,role) {
+      return peopleData.map(item=>{
+        if(role === 'teacher'){
+          return new Teacher(item.name,item.age,item.subject)
+        } else if(role === 'student'){
+          return new Student(item.name,item.age);
+        } else if (role === 'admin') {
+          return new Administrator(item.name,item.age);
+        }
+      })
+    }
+  }
+
+
+
+  let teahersData = [
+    {name: 'Елисей',age:'43',subject:'history'},
+    {name: 'Дарий',age:'52',subject:'geometry'},
+    {name: 'Юлий',age:'36',subject:'physics'},
+    {name: 'Регина',age:'28',subject:'literature'},
+    {name: 'Анжелика',age:'25',subject:'chemistry'},
+  ];
+
+  let studentsData = [
+    [
+      {name: 'Иван', age: '17'},
+      {name: 'Даниил', age: '16'},
+      {name: 'Наталья', age: '18'},
+      {name: 'Кирилл', age: '19'},
+      {name: 'Олег', age: '19'},
+      {name: 'Оксана', age: '17'}
+    ],
+    [
+      {name: 'Семён', age: '18'},
+      {name: 'Раиса', age: '16'},
+      {name: 'Феликс', age: '17'},
+      {name: 'Вениамин', age: '18'},
+      {name: 'Валерия', age: '19'},
+      {name: 'Лаврентий', age: '21'}
+    ]
+  ];
+
+  let adminsData = [
+    {name: 'Семён', age: '55'},
+    {name: 'Клементина ', age: '46'},
+  ];
+
+ let school = new School(adminsData,teahersData);
+
+ let course = school.startCourse(studentsData,10);
+ course.forEach(result=>console.table(result));
+
+
+  $('#my-final-table').dynatable({
+    dataset: {
+      records: course.reduce((arr,item)=>arr.concat(...item),[]),
+      perPageDefault:20
+    },
+    features: {
+      paginate: false,
+      sort: false,
+      pushState: false,
+      search: false,
+      recordCount: false,
+      perPageSelect: false
+    },
+  });
+
+</script>
+
+</body>
+</html>
