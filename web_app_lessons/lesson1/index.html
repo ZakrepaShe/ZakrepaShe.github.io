@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lesson 1 - Payment Tables with webpack & imports</title>
+  <style>
+    table, td, tr {
+      border: 1px solid;
+      border-collapse: collapse;
+    }
+
+    table {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+
+<table>
+  <thead>
+  <tr>
+    <td>Total</td>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td id="total">Total</td>
+  </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+  <tr>
+    <td>DEPARTMENT</td>
+    <td>Avg.Payment</td>
+  </tr>
+  </thead>
+  <tbody id="DEPARTMENT">
+
+  </tbody>
+</table>
+
+<table>
+  <thead>
+  <tr>
+    <td>MONTH</td>
+    <td>Avg.Payment</td>
+  </tr>
+  </thead>
+  <tbody id="MONTH">
+
+  </tbody>
+</table>
+<script type="text/javascript" src="./dist/bundle.js"></script>
+
+</body>
+</html>

@@ -174,7 +174,7 @@
             if (lessonAdmin.isAbsent()) {
               group.concat(teacher,lessonAdmin).forEach(human=>human.incAbsent());
             } else if(teacher.isAbsent()) {
-              group.forEach(student=>student.incAbsent());
+              group.concat(teacher).forEach(student=>student.incAbsent());
             } else {
               teacher.setMarksToGroup(group)
             }
